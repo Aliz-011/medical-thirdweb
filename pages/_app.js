@@ -1,6 +1,6 @@
 import '../styles/globals.css';
 import { ThirdwebProvider, ChainId } from '@thirdweb-dev/react';
-import { AuthProvider } from '../context/AuthContext';
+import AuthProvider from '../context/AuthContext';
 
 export default function MyApp({ Component, pageProps }) {
   return (

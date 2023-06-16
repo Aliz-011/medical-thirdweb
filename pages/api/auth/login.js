@@ -1,29 +1,17 @@
 import { verifyLogin } from '@thirdweb-dev/auth/evm';
-import { createSupabaseServer } from '../../../lib/createSupabaseAdmin';
+import initializeFirebaseServer from '../../../lib/initFirebaseAdmin';
 
 export default async function login(req, res) {
-  const { payload, access_token } = req.body;
-
-  // Use the Supabase service role to access the database with full permissions
-  const supabase = createSupabaseServer();
+  const { payload } = req.body;
 
   const domain = 'example.org';
 
-  // Get the user from our database using the client side access token
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(access_token);
+  const { address, error } = await verifyLogin(domain, payload);
 
-  // Verify that the signed login payload is valid
-  const { address, error: verifyErr } = await verifyLogin(domain, payload);
-  if (!address) {
-    return res.status(400).json({ error: verifyErr });
-  }
+  if (!address) return res.status(401).json({ error });
 
-  // Update the user's address in our database
-  const { data } = await supabase.auth.admin.updateUserById(user.id, {
-    user_metadata: { address: address.toLowerCase() },
-  });
+  const { auth } = initializeFirebaseServer();
 
-  return res.status(200).json({ data }).end();
+  const token = await auth.createCustomToken(address);
+  return res.status(200).json({ address, token });
 }
